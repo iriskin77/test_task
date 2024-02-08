@@ -53,7 +53,7 @@ async def get_task_by_batch_date(number_batch: int, date_batch: datetime, async_
 # ==================Get endpoint. Get a task by id ==================
 
 
-async def _get_batch(id: int, async_session: AsyncSession):
+async def _get_task(id: int, async_session: AsyncSession):
 
     try:
         query = select(Task).where(Task.id == id)
@@ -103,7 +103,7 @@ async def _get_task_by_id(id: int, async_session: AsyncSession):
 # ================ Patch endpoint, Change a task =================
 
 
-async def _change_batch(id: int, params_to_update: dict, async_session: AsyncSession):
+async def _change_task(id: int, params_to_update: dict, async_session: AsyncSession):
     query = update(Task).where(Task.id == id).values(**params_to_update)
     task_updated = await async_session.execute(query)
     await async_session.commit()

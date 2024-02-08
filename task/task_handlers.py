@@ -19,7 +19,7 @@ async def create_task(item: TaskBase, async_session: AsyncSession = Depends(get_
 
 
 @router_task.get("/{id}", response_model=TaskProducts)
-async def get_batch(id: int, async_session: AsyncSession = Depends(get_async_session)):
+async def get_task(id: int, async_session: AsyncSession = Depends(get_async_session)):
     """"Эндпойнт получения сменного задания (партии) по ID (primary key)"""""
 
     task = db_tasks._get_task_by_id(id=id, async_session=async_session)
@@ -27,14 +27,14 @@ async def get_batch(id: int, async_session: AsyncSession = Depends(get_async_ses
         HTTPException(status_code=404, detail="Task with this id was not found")
 
     try:
-        res = await db_tasks._get_batch(id=id, async_session=async_session)
+        res = await db_tasks._get_task(id=id, async_session=async_session)
         return res
     except Exception as ex:
         HTTPException(status_code=500, detail=f"Database error: {ex}")
 
 
 @router_task.patch("/{id}", response_model=TaskChange)
-async def change_batch(id: int, params_to_update: TaskChange, async_session: AsyncSession = Depends(get_async_session)):
+async def change_task(id: int, params_to_update: TaskChange, async_session: AsyncSession = Depends(get_async_session)):
 
     """"Эндпойнт изменения сменного задания (партии) по ID (primary key)"""""
 
@@ -48,7 +48,7 @@ async def change_batch(id: int, params_to_update: TaskChange, async_session: Asy
     params = params_to_update.dict(exclude_none=True)
 
     try:
-        res = await db_tasks.change_batch(id=id, params_to_update=params, async_session=async_session)
+        res = await db_tasks._change_task(id=id, params_to_update=params, async_session=async_session)
         return res
     except Exception as ex:
         HTTPException(status_code=500, detail=f"Database error: {ex}")
