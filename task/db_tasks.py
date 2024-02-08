@@ -1,6 +1,6 @@
 from datetime import datetime
 from task.models import Task, Product
-from task.schema import TaskBase
+from task.schema import TaskBase, TaskFilter, TaskProducts
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, update, delete
 from fastapi import HTTPException
@@ -20,24 +20,12 @@ async def _create_task(item: TaskBase, async_session: AsyncSession):
         await async_session.execute(query)
 
     try:
-        new_task = Task(
-                 status=item.status,
-                 task=item.task,
-                 line=item.line,
-                 shift=item.shift,
-                 group=item.group,
-                 number_batch=item.number_batch,
-                 date_batch=item.date_batch,
-                 nomenclature=item.nomenclature,
-                 code=item.code,
-                 index=item.index,
-                 date_begin=item.date_begin,
-                 date_end=item.date_end)
 
-        # new_task = Task(**item.dict())
+        new_task = Task(**item.dict())
 
         async_session.add(new_task)
         await async_session.commit()
+
         return new_task
 
     except Exception as ex:
@@ -56,6 +44,7 @@ async def get_task_by_batch_date(number_batch: int, date_batch: datetime, async_
 async def _get_task(id: int, async_session: AsyncSession):
 
     try:
+
         query = select(Task).where(Task.id == id)
         task_extraced = await async_session.execute(query)
         task = task_extraced.fetchone()[0]
@@ -64,11 +53,14 @@ async def _get_task(id: int, async_session: AsyncSession):
         products = await async_session.execute(products_query)
 
         if products is None:
-            HTTPException(status_code=404, detail="Products with this batch is were not found")
+            HTTPException(status_code=404, detail="Products with this batch were not found")
+
+        pr = [elem for elem in products.scalars()]
 
         res = {
               "id": task.id,
-              "status": task.status,
+              "is_closed": task.is_closed,
+              "closed_at": task.closed_at,
               "task": task.task,
               "line": task.line,
               "shift": task.shift,
@@ -80,8 +72,10 @@ async def _get_task(id: int, async_session: AsyncSession):
               "index": task.index,
               "date_begin": task.date_begin,
               "date_end": task.date_end,
-              "products": products.scalars()
+              "products": pr
         }
+
+        #res1 = {**task.dict(), "products": rs}
 
         return res
 
@@ -114,3 +108,18 @@ async def _change_task(id: int, params_to_update: dict, async_session: AsyncSess
         HTTPException(status_code=404, detail="Task with this id was not found")
 
     return task_updated_row[0]
+
+
+# ======================== Filter tasks ==========================
+
+async def _filter_tasks(item: TaskFilter, offset: int, limit: int, async_session: AsyncSession):
+    params_to_sort = item.dict(exclude_none=True)
+    try:
+        query = select(Task).filter_by(**params_to_sort).offset(offset).limit(limit)
+        tasks = await async_session.execute(query)
+        res_tasks = [i for i in tasks.scalars()]
+        res = {"tasks": res_tasks}
+        return res
+
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"{ex}")

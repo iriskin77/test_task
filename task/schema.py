@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from task.product.schema import ProductBase
 from pydantic import BaseModel, Field
 from datetime import datetime, date
@@ -31,3 +31,17 @@ class TaskProducts(TaskBase):
 class TaskChange(TaskBase):
     is_closed: bool = Field(exclude=True)
     closed_at: datetime = Field(exclude=True)
+
+
+class TaskFilter(BaseModel):
+
+    task: Optional[str] | None = None
+    line: Optional[str] | None = None
+    shift: Optional[str] | None = None
+    group: Optional[str] | None = None
+    number_batch: Optional[int] | None = None
+
+
+class TaskFilterRes(BaseModel):
+
+    tasks: List[TaskBase] | None = None
