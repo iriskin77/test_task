@@ -6,6 +6,9 @@ from sqlalchemy import select, and_, update, delete
 from fastapi import HTTPException
 
 
+# ==================Post endpoint. Create a task==================
+
+
 async def _create_task(item: TaskBase, async_session: AsyncSession):
 
     task_check = await get_task_by_batch_date(number_batch=item.number_batch,
@@ -45,6 +48,9 @@ async def get_task_by_batch_date(number_batch: int, date_batch: datetime, async_
     query = select(Task).where(and_(Task.number_batch == number_batch, Task.date_batch == date_batch))
     task = await async_session.execute(query)
     return task
+
+
+# ==================Get endpoint. Get a task by id ==================
 
 
 async def _get_batch(id: int, async_session: AsyncSession):
@@ -92,3 +98,19 @@ async def _get_task_by_id(id: int, async_session: AsyncSession):
 
     res = await async_session.execute(task)
     return res.fetchone()[0]
+
+
+# ================ Patch endpoint, Change a task =================
+
+
+async def _change_batch(id: int, params_to_update: dict, async_session: AsyncSession):
+    query = update(Task).where(Task.id == id).values(**params_to_update)
+    task_updated = await async_session.execute(query)
+    await async_session.commit()
+    #return task_updated
+    task_updated_row = task_updated.fetchone()
+
+    if task_updated_row[0] is None:
+        HTTPException(status_code=404, detail="Task with this id was not found")
+
+    return task_updated_row[0]

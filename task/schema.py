@@ -1,6 +1,6 @@
 from typing import List
 from task.product.schema import ProductBase
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, date
 
 
@@ -26,3 +26,8 @@ class TaskBase(BaseModel):
 
 class TaskProducts(TaskBase):
     products: List[ProductBase]
+
+
+class TaskChange(TaskBase):
+    is_closed: bool = Field(exclude=True)
+    closed_at: datetime = Field(exclude=True)
