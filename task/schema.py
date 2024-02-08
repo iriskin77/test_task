@@ -1,3 +1,5 @@
+from typing import List
+from task.product.schema import ProductBase
 from pydantic import BaseModel
 from datetime import datetime, date
 
@@ -20,3 +22,7 @@ class TaskBase(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class TaskProducts(TaskBase):
+    products: List[ProductBase]
