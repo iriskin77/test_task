@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from core.base import Base
 
 
@@ -8,7 +8,8 @@ class Task(Base):
     __tablename__ = "task"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
-    status = Column(Boolean) # "СтатусЗакрытия": false,
+    is_closed = Column(Boolean, nullable=True) # "СтатусЗакрытия": false,
+    closed_at = Column(DateTime)
     task = Column(String) # "ПредставлениеЗаданияНаСмену": "Задание на смену 2345",
     line = Column(String) # "Линия": "Т2",
     shift = Column(String) # "Смена": "1",
@@ -27,7 +28,10 @@ class Product(Base):
     __tablename__ = "product"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
-    number_batch = Column(Integer, ForeignKey("task.id"))
-    number_batch_id = relationship("Task")
-    date_product = Column(DateTime, unique=True)
+    unique_code = Column(String, unique=True)
+    number_batch_id = Column(Integer, ForeignKey("task.number_batch"))  #"НомерПартии": 22222,
+    number_batch = relationship("Task")
+    is_aggregated = Column(Boolean, nullable=True)
+    aggregated_at = Column(DateTime, nullable=True)
+    date_product = Column(DateTime) #"ДатаПартии": "2024-01-30"
 
