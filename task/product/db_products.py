@@ -1,13 +1,15 @@
-from datetime import datetime
+from datetime import datetime, date
 from task.models import Task, Product
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from task.product.schema import ProductAddTasks, ProductAggregation
+from task.product.schema import ProductAddTasks, ProductAggregation, ProductBase
 from fastapi import HTTPException
+from sqlalchemy import sql
 
 
 async def _product_create(items: ProductAddTasks, async_session: AsyncSession):
-
+    
+    products_to_add = []
     for product in items.dict()['products']:
 
         query_task = select(Task).\
@@ -20,11 +22,17 @@ async def _product_create(items: ProductAddTasks, async_session: AsyncSession):
         if task is not None:
             if unique_code is not None:
 
-                new_product = Product(unique_code=product['unique_code'],
-                                      number_batch_id=product['number_batch_id'],
-                                      date_product=product['date_product'])
-                async_session.add(new_product)
+                new_product_to_add = {"id": product['id'],
+                                      "unique_code": product['unique_code'],
+                                      "number_batch_id": product['number_batch_id'],
+                                      "date_product": product['date_product']}
+                dict_product = Product(**new_product_to_add)
+                products_to_add.append(ProductBase(**new_product_to_add))
+
+                async_session.add(dict_product)
     await async_session.commit()
+
+    return {'products': products_to_add}
 
 
 async def _aggregate_date(item: ProductAggregation, async_session: AsyncSession):

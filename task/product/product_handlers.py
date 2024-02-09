@@ -8,7 +8,7 @@ from task.product import db_products
 router_product = APIRouter()
 
 
-@router_product.post("/")
+@router_product.post("/", response_model=ProductAddTasks)
 async def product_create(items: ProductAddTasks, async_session: AsyncSession = Depends(get_async_session)):
     """"Эндпойнт добавления продукции для сменного задания (партии)"""""
     #params = item.dict(exclude_none=True)

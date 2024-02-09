@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 
 
 class ProductBase(BaseModel):
@@ -8,7 +8,7 @@ class ProductBase(BaseModel):
     id: int
     unique_code: str
     number_batch_id: int
-    date_product: datetime
+    date_product: date
 
     class Config:
         orm_mode = True
