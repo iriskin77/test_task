@@ -11,9 +11,7 @@ from fastapi import HTTPException
 
 async def _create_task(item: TaskBase, async_session: AsyncSession):
 
-    task_check = await get_task_by_batch_date(number_batch=item.number_batch,
-                                              date_batch=item.date_batch,
-                                              async_session=async_session)
+    task_check = await get_task_by_batch_date(item=item, async_session=async_session)
 
     if task_check is not None:
         query = delete(Task).where(and_(Task.number_batch == item.number_batch, item.date_batch))
@@ -32,8 +30,8 @@ async def _create_task(item: TaskBase, async_session: AsyncSession):
         HTTPException(status_code=500, detail=f"Invalid insert to the database {ex}")
 
 
-async def get_task_by_batch_date(number_batch: int, date_batch: datetime, async_session: AsyncSession):
-    query = select(Task).where(and_(Task.number_batch == number_batch, Task.date_batch == date_batch))
+async def get_task_by_batch_date(item: TaskBase, async_session: AsyncSession):
+    query = select(Task).where(and_(Task.number_batch == item.number_batch, Task.date_batch == item.date_batch))
     task = await async_session.execute(query)
     return task
 
@@ -45,9 +43,10 @@ async def _get_task(id: int, async_session: AsyncSession):
 
     try:
 
-        query = select(Task).where(Task.id == id)
-        task_extraced = await async_session.execute(query)
-        task = task_extraced.fetchone()[0]
+        task = _get_task_by_id(id=id, async_session=async_session)
+
+        if task is None:
+            HTTPException(status_code=404, detail="Task with this id was not found")
 
         products_query = select(Product).where(Product.number_batch_id == task.number_batch)
         products = await async_session.execute(products_query)
@@ -75,8 +74,6 @@ async def _get_task(id: int, async_session: AsyncSession):
               "products": pr
         }
 
-        #res1 = {**task.dict(), "products": rs}
-
         return res
 
     except Exception as ex:
@@ -87,11 +84,8 @@ async def _get_task_by_id(id: int, async_session: AsyncSession):
 
     task = select(Task).where(Task.id == id)
 
-    if task is None:
-        HTTPException(status_code=404, detail="Task with this id was not found")
-
     res = await async_session.execute(task)
-    return res.fetchone()[0]
+    return res
 
 
 # ================ Patch endpoint, Change a task =================
