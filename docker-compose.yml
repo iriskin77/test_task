@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: test_task
+    command: ["./start.sh"]
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8090:8090"
+
+  db:
+    image: postgres
+    container_name: postgres_container
+    volumes:
+      - data:/var/lib/postgresql/data/
+    restart: always
+    env_file:
+      - .env
+    ports:
+    - "5440:5432"
+
+volumes:
+  data:
