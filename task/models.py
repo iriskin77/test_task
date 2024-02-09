@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Date
+from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Date, TIMESTAMP
 from sqlalchemy.orm import relationship, backref
 from core.base import Base
 
@@ -9,7 +9,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     is_closed = Column(Boolean, nullable=True) # "СтатусЗакрытия": false,
-    closed_at = Column(DateTime)
+    closed_at = Column(TIMESTAMP)
     task = Column(String) # "ПредставлениеЗаданияНаСмену": "Задание на смену 2345",
     line = Column(String) # "Линия": "Т2",
     shift = Column(String) # "Смена": "1",
@@ -19,8 +19,8 @@ class Task(Base):
     nomenclature = Column(Text) # "Номенклатура": "Какая то номенклатура",
     code = Column(String) # "КодЕКН": "456678",
     index = Column(String) # "ИдентификаторРЦ": "A",
-    date_begin = Column(DateTime) # "ДатаВремяНачалаСмены": "2024-01-30T20:00:00+05:00",
-    date_end = Column(DateTime) # "ДатаВремяОкончанияСмены": "2024-01-31T08:00:00+05:00"
+    date_begin = Column(TIMESTAMP) # "ДатаВремяНачалаСмены": "2024-01-30T20:00:00+05:00",
+    date_end = Column(TIMESTAMP) # "ДатаВремяОкончанияСмены": "2024-01-31T08:00:00+05:00"
 
 
 class Product(Base):
@@ -32,6 +32,6 @@ class Product(Base):
     number_batch_id = Column(Integer, ForeignKey("task.number_batch"))  #"НомерПартии": 22222,
     number_batch = relationship("Task")
     is_aggregated = Column(Boolean, nullable=True)
-    aggregated_at = Column(DateTime, nullable=True)
-    date_product = Column(DateTime) #"ДатаПартии": "2024-01-30"
+    aggregated_at = Column(TIMESTAMP, nullable=True)
+    date_product = Column(TIMESTAMP) #"ДатаПартии": "2024-01-30"
 
