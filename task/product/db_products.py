@@ -8,7 +8,6 @@ from sqlalchemy import sql
 
 
 async def _product_create(items: ProductAddTasks, async_session: AsyncSession):
-    
     products_to_add = []
     for product in items.dict()['products']:
 
