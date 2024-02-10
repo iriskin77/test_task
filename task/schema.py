@@ -1,5 +1,5 @@
 from typing import List, Optional
-from task.product.schema import ProductBase
+from product.schema import ProductBase
 from pydantic import BaseModel, Field
 from datetime import datetime, date
 

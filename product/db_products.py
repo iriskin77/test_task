@@ -1,10 +1,9 @@
-from datetime import datetime, date
+from datetime import datetime
 from task.models import Task, Product
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from task.product.schema import ProductAddTasks, ProductAggregation, ProductBase
+from product.schema import ProductAddTasks, ProductAggregation, ProductBase
 from fastapi import HTTPException
-from sqlalchemy import sql
 
 
 async def _product_create(items: ProductAddTasks, async_session: AsyncSession):

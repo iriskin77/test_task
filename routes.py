@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from task import task_handlers
-from task.product import product_handlers
-
+from product import product_handlers
 
 routes = APIRouter()
 

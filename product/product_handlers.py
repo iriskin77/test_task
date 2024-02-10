@@ -1,9 +1,8 @@
 from core.async_session import get_async_session
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from task.product.schema import ProductAddTasks, ProductAggregation
-from task.product import db_products
-
+from product.schema import ProductAddTasks, ProductAggregation
+from product import db_products
 
 router_product = APIRouter()
 
