@@ -1,7 +1,5 @@
 FROM python:3.10-slim
 
-RUN mkdir /test_task
-
 WORKDIR /test_task
 
 COPY requirements.txt .
