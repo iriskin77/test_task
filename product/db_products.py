@@ -35,15 +35,13 @@ async def _product_create(items: ProductAddTasks, async_session: AsyncSession):
 
 async def _aggregate_date(item: ProductAggregation, async_session: AsyncSession):
 
-    query_product = select(Product).where(Product.unique_code == item.unique_code)
-    product = await async_session.execute(query_product)
-    product_to_update = product.fetchone()
+    product = await get_product_by_unique_code(item=item, async_session=async_session)
 
-    if product_to_update is None:
+    if product is None:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    if product_to_update[0].is_aggregated:
-        raise HTTPException(status_code=400, detail=f"unique code already used at {product.fetchone()[0].is_aggregated}")
+    if product.is_aggregated:
+        raise HTTPException(status_code=400, detail=f"unique code already used at {product.is_aggregated}")
 
     query_task = select(Task).where(Task.id == item.task_id)
     task = await async_session.execute(query_task)
@@ -51,10 +49,19 @@ async def _aggregate_date(item: ProductAggregation, async_session: AsyncSession)
     if task_check is None:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    if task_check.number_batch != product_to_update[0].number_batch_id:
+    if task_check.number_batch != product.number_batch_id:
         raise HTTPException(status_code=400, detail="unique code is attached to another batch")
 
-    product_to_update[0].is_aggregated = True
-    product_to_update[0].aggregated_at = datetime.now()
+    product.is_aggregated = True
+    product.aggregated_at = datetime.now()
 
     await async_session.commit()
+    return product
+
+
+async def get_product_by_unique_code(item: ProductAggregation, async_session: AsyncSession):
+    query_product = select(Product).where(Product.unique_code == item.unique_code)
+    product = await async_session.execute(query_product)
+    product_row = product.fetchone()
+    if product_row is not None:
+        return product_row[0]
