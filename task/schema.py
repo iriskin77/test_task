@@ -33,8 +33,11 @@ class TaskChange(TaskBase):
     closed_at: datetime = Field(exclude=True)
 
 
-class TaskFilter(BaseModel):
+class TaskChangeReturn(BaseModel):
+    id: int
 
+
+class TaskFilter(BaseModel):
     task: Optional[str] | None = None
     line: Optional[str] | None = None
     shift: Optional[str] | None = None
@@ -43,5 +46,4 @@ class TaskFilter(BaseModel):
 
 
 class TaskFilterRes(BaseModel):
-
     tasks: List[TaskBase] | None = None

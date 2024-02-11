@@ -30,7 +30,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True, unique=True)
     unique_code = Column(String, unique=True)
     number_batch_id = Column(Integer, ForeignKey("task.number_batch"))  #"НомерПартии": 22222,
-    number_batch = relationship("Task")
+    number_batch = relationship("Task", cascade="save-update")
     is_aggregated = Column(Boolean, nullable=True)
     aggregated_at = Column(TIMESTAMP, nullable=True)
     date_product = Column(TIMESTAMP) #"ДатаПартии": "2024-01-30"

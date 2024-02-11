@@ -1,6 +1,5 @@
-from datetime import datetime
 from task.models import Task, Product
-from task.schema import TaskBase, TaskFilter, TaskProducts
+from task.schema import TaskBase, TaskFilter, TaskProducts, TaskChange
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, update, delete
 from fastapi import HTTPException
@@ -14,17 +13,19 @@ async def _create_task(item: TaskBase, async_session: AsyncSession):
     task_check = await get_task_by_batch_date(item=item, async_session=async_session)
 
     if task_check is not None:
-        query = delete(Task).where(and_(Task.number_batch == item.number_batch, item.date_batch))
+        query = delete(Task).where(and_(Task.number_batch == item.number_batch, Task.date_batch == item.date_batch))
         await async_session.execute(query)
 
     try:
 
         new_task = Task(**item.dict())
 
+        res = TaskBase(**item.dict())
         async_session.add(new_task)
+
         await async_session.commit()
 
-        return new_task
+        return res
 
     except Exception as ex:
         HTTPException(status_code=500, detail=f"Invalid insert to the database {ex}")
@@ -33,7 +34,9 @@ async def _create_task(item: TaskBase, async_session: AsyncSession):
 async def get_task_by_batch_date(item: TaskBase, async_session: AsyncSession):
     query = select(Task).where(and_(Task.number_batch == item.number_batch, Task.date_batch == item.date_batch))
     task = await async_session.execute(query)
-    return task
+    task_row = task.fetchone()
+    if task_row is not None:
+        return task_row[0]
 
 
 # ==================Get endpoint. Get a task by id ==================
@@ -43,10 +46,7 @@ async def _get_task(id: int, async_session: AsyncSession):
 
     try:
 
-        task = _get_task_by_id(id=id, async_session=async_session)
-
-        if task is None:
-            HTTPException(status_code=404, detail="Task with this id was not found")
+        task = await _get_task_by_id(id=id, async_session=async_session)
 
         products_query = select(Product).where(Product.number_batch_id == task.number_batch)
         products = await async_session.execute(products_query)
@@ -82,26 +82,25 @@ async def _get_task(id: int, async_session: AsyncSession):
 
 async def _get_task_by_id(id: int, async_session: AsyncSession):
 
-    task = select(Task).where(Task.id == id)
-
-    res = await async_session.execute(task)
-    return res
+    query = select(Task).where(Task.id == id)
+    task = await async_session.execute(query)
+    task_row = task.fetchone()
+    if task_row is not None:
+        return task_row[0]
 
 
 # ================ Patch endpoint, Change a task =================
 
 
 async def _change_task(id: int, params_to_update: dict, async_session: AsyncSession):
-    query = update(Task).where(Task.id == id).values(**params_to_update)
+
+    query = update(Task).where(Task.id == id).values(**params_to_update).returning(Task.id)
     task_updated = await async_session.execute(query)
     await async_session.commit()
-    #return task_updated
+
     task_updated_row = task_updated.fetchone()
-
-    if task_updated_row[0] is None:
-        HTTPException(status_code=404, detail="Task with this id was not found")
-
-    return task_updated_row[0]
+    if task_updated_row is not None:
+        return {"id": task_updated_row[0]}
 
 
 # ======================== Filter tasks ==========================

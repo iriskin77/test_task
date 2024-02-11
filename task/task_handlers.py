@@ -2,8 +2,7 @@ from core.async_session import get_async_session
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from task import db_tasks
-from task.schema import TaskBase, TaskProducts, TaskChange, TaskFilter, TaskFilterRes
-
+from task.schema import TaskBase, TaskProducts, TaskChange, TaskFilter, TaskFilterRes, TaskChangeReturn
 
 router_task = APIRouter()
 
@@ -21,7 +20,9 @@ async def create_task(item: TaskBase, async_session: AsyncSession = Depends(get_
 @router_task.get("/{id}", response_model=TaskProducts)
 async def get_task(id: int, async_session: AsyncSession = Depends(get_async_session)):
     """"Эндпойнт получения сменного задания (партии) по ID (primary key)"""""
-    task = db_tasks._get_task_by_id(id=id, async_session=async_session)
+
+    task = await db_tasks._get_task_by_id(id=id, async_session=async_session)
+
     if task is None:
         raise HTTPException(status_code=404, detail="Task with this id was not found")
 
@@ -32,7 +33,7 @@ async def get_task(id: int, async_session: AsyncSession = Depends(get_async_sess
         raise HTTPException(status_code=500, detail=f"Database error: {ex}")
 
 
-@router_task.patch("/{id}", response_model=TaskChange)
+@router_task.patch("/{id}", response_model=TaskChangeReturn)
 async def change_task(id: int, params_to_update: TaskChange, async_session: AsyncSession = Depends(get_async_session)):
 
     """"Эндпойнт изменения сменного задания (партии) по ID (primary key)"""""
@@ -54,7 +55,7 @@ async def change_task(id: int, params_to_update: TaskChange, async_session: Asyn
 
 
 @router_task.get("/filter/{item}", response_model=TaskFilterRes)
-async def get_filtered_tasks(item: TaskFilter = Depends(),  offset: int = 0, limit: int = 0, async_session: AsyncSession = Depends(get_async_session)):
+async def get_filtered_tasks(item: TaskFilter = Depends(),  offset: int = 0, limit: int = 10, async_session: AsyncSession = Depends(get_async_session)):
     if item == {}:
         raise HTTPException(status_code=422, detail="At least one parameter should be provided")
 
