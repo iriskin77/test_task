@@ -1,6 +1,6 @@
 from datetime import datetime
 from task.models import Task, Product
-from task.schema import TaskBase, TaskFilter
+from task.schema import TaskBase, TaskFilter, TaskGetPost
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, update, delete
 from fastapi import HTTPException
@@ -9,19 +9,21 @@ from fastapi import HTTPException
 # ==================Post endpoint. Create a task==================
 
 
-async def _create_task(item: TaskBase, async_session: AsyncSession):
+async def _create_task(item: TaskGetPost, async_session: AsyncSession):
 
     task = await get_task_by_batch_date(item=item,
-                                              async_session=async_session)
+                                        async_session=async_session)
 
     # Если уже существует какая-то партия с аналогичным номером партии и датой партии, мы должны ее перезаписать.
-    # Здесь проверяем, если есть, то удаяем
+    # Здесь проверяем, если есть, то перезаписываем
     if task is not None:
-        query = delete(Task).\
+        query = update(Task).\
             where(and_(Task.number_batch == item.number_batch,
-                       Task.date_batch == item.date_batch))
+                       Task.date_batch == item.date_batch)).values(**item.dict())
 
         await async_session.execute(query)
+        await async_session.commit()
+        return item
 
     try:
 
@@ -35,7 +37,7 @@ async def _create_task(item: TaskBase, async_session: AsyncSession):
 
     except Exception as ex:
         HTTPException(status_code=500,
-                      detail=f"Invalid insert to the database {ex}")
+                      detail=f"Impossible to insert to the database {ex}")
 
 
 async def get_task_by_batch_date(item: TaskBase,
@@ -87,8 +89,6 @@ async def _get_task(id: int, async_session: AsyncSession):
               "products": pr
         }
 
-        #res1 = TaskProducts.model_validate(**res)
-
         return res
 
     except Exception as ex:
@@ -129,11 +129,9 @@ async def _change_task(id: int,
     await async_session.commit()
 
     task_updated = await _get_task_by_id(id=id,
-                                 async_session=async_session)
+                                         async_session=async_session)
 
-    task_updated_row = task_updated.fetchone()
-    if task_updated_row is not None:
-        return task_updated_row[0]
+    return task_updated
 
 
 # ======================== Filter tasks ==========================
