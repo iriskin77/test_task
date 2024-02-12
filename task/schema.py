@@ -19,6 +19,9 @@ class TaskBase(BaseModel):
     date_begin: datetime | None = Field(validation_alias="ДатаВремяНачалаСмены")
     date_end: datetime | None = Field(validation_alias="ДатаВремяОкончанияСмены")
 
+
+class TaskGetPost(TaskBase):
+
     model_config = ConfigDict(populate_by_name=True,)
 
 
@@ -31,10 +34,6 @@ class TaskChange(TaskBase):
     closed_at: datetime = Field(exclude=True)
 
 
-class TaskChangeReturn(BaseModel):
-    id: int
-
-
 class TaskFilter(BaseModel):
     task: Optional[str] | None = None
     line: Optional[str] | None = None
@@ -44,4 +43,4 @@ class TaskFilter(BaseModel):
 
 
 class TaskFilterRes(BaseModel):
-    tasks: List[TaskBase] | None = None
+    tasks: List[TaskGetPost] | None = None

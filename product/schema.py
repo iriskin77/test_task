@@ -32,3 +32,5 @@ class ProductAggregation(BaseModel):
     task_id: int
     unique_code: str
 
+    model_config = ConfigDict(populate_by_name=True,)
+

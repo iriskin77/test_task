@@ -2,14 +2,14 @@ from core.async_session import get_async_session
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from task import db_tasks
-from task.schema import TaskBase, TaskProducts, TaskChange, TaskFilter, TaskFilterRes, TaskChangeReturn
+from task.schema import TaskProducts, TaskChange, TaskFilter, TaskFilterRes, TaskGetPost
 
 
 router_task = APIRouter()
 
 
-@router_task.post("/", response_model=TaskBase)
-async def create_task(item: TaskBase,
+@router_task.post("/", response_model=TaskGetPost)
+async def create_task(item: TaskGetPost,
                       async_session: AsyncSession = Depends(get_async_session)):
 
     """"Эндпойнт добавления сменных заданий"""""
@@ -46,7 +46,7 @@ async def get_task(id: int,
                             detail=f"Database error: {ex}")
 
 
-@router_task.patch("/{id}", response_model=TaskChangeReturn)
+@router_task.patch("/{id}", response_model=TaskGetPost)
 async def change_task(id: int,
                       params_to_update: TaskChange,
                       async_session: AsyncSession = Depends(get_async_session)):
@@ -86,7 +86,7 @@ async def get_filtered_tasks(item: TaskFilter = Depends(),
                             detail="At least one parameter should be provided")
 
     res = await db_tasks._get_filtered_tasks(item=item,
-                                       limit=limit,
-                                       offset=offset,
-                                       async_session=async_session)
+                                             limit=limit,
+                                             offset=offset,
+                                             async_session=async_session)
     return res
