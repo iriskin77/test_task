@@ -1,27 +1,25 @@
 from typing import List, Optional
 from product.schema import ProductBase
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime, date
 
 
 class TaskBase(BaseModel):
-    id: int | None = None
-    is_closed: bool | None = None
-    closed_at: datetime | None = None
-    task: str | None = None
-    line: str | None = None
-    shift: str | None = None
-    group: str | None = None
-    number_batch: int | None = None
-    date_batch: date | None = None
-    nomenclature: str | None = None
-    code: str | None = None
-    index: str | None = None
-    date_begin: datetime | None = None
-    date_end: datetime | None = None
+    is_closed: bool | None = Field(validation_alias="СтатусЗакрытия")
+    closed_at: datetime | None = Field(validation_alias="ВремяЗакрытия")
+    task: str | None = Field(validation_alias="ПредставлениеЗаданияНаСмену")
+    line: str | None = Field(validation_alias="Линия")
+    shift: str | None = Field(validation_alias="Смена")
+    group: str | None = Field(validation_alias="Бригада")
+    number_batch: int | None = Field(validation_alias="НомерПартии")
+    date_batch: date | None = Field(validation_alias="ДатаПартии")
+    nomenclature: str | None = Field(validation_alias="Номенклатура")
+    code: str | None = Field(validation_alias="КодЕКН")
+    index: str | None = Field(validation_alias="ИдентификаторРЦ")
+    date_begin: datetime | None = Field(validation_alias="ДатаВремяНачалаСмены")
+    date_end: datetime | None = Field(validation_alias="ДатаВремяОкончанияСмены")
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(populate_by_name=True,)
 
 
 class TaskProducts(TaskBase):
