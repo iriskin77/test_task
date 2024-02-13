@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Date, TIMESTAMP
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Date
+from sqlalchemy.orm import relationship
 from core.base import Base
 
 
@@ -8,8 +8,8 @@ class Task(Base):
     __tablename__ = "task"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
-    is_closed = Column(Boolean, nullable=False, default=None) # "СтатусЗакрытия": false,
-    closed_at = Column(DateTime, default=None) # время закрытия
+    is_closed = Column(Boolean,  default=False) # "СтатусЗакрытия": false,
+    closed_at = Column(DateTime, nullable=True, default=None) # время закрытия
     task = Column(String) # "ПредставлениеЗаданияНаСмену": "Задание на смену 2345",
     line = Column(String) # "Линия": "Т2",
     shift = Column(String) # "Смена": "1",
@@ -28,7 +28,7 @@ class Product(Base):
     __tablename__ = "product"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
-    unique_code = Column(String, unique=True)
+    unique_code = Column(String, unique=True) # "УникальныйКодПродукта": "12gRV60MMsn1"
     number_batch_id = Column(Integer, ForeignKey("task.number_batch"))  #"НомерПартии": 22222,
     number_batch = relationship("Task", cascade="save-update")
     is_aggregated = Column(Boolean, nullable=True, default=None)

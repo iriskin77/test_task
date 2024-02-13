@@ -87,7 +87,6 @@ async def _aggregate_date(item: ProductAggregationRequest,
 
     product.is_aggregated = True
     product.aggregated_at = datetime.now()
-    print(product.unique_code)
 
     await async_session.commit()
     return item

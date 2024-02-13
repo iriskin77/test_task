@@ -9,5 +9,3 @@ DATABASE_URL_SQLITE = f"sqlite+aiosqlite:///task_db.sqlite3"
 
 engine = create_async_engine(DATABASE_URL_SQLITE, echo=False, future=True)
 SessionLocal = sessionmaker(autoflush=False, bind=engine, class_=AsyncSession)
-
-
