@@ -1,12 +1,12 @@
 from typing import List, Optional
 from product.schema import ProductBase
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime, date
 
 
-class TaskBase(BaseModel):
-    is_closed: bool | None = Field(validation_alias="СтатусЗакрытия")
-    closed_at: datetime | None = Field(validation_alias="ВремяЗакрытия")
+class TaskGetPostPatch(BaseModel):
+    is_closed: bool | None = Field(validation_alias="СтатусЗакрытия", default=True)
+    closed_at: Optional[datetime] | None = Field(validation_alias="ВремяЗакрытия", default=None)
     task: str | None = Field(validation_alias="ПредставлениеЗаданияНаСмену")
     line: str | None = Field(validation_alias="Линия")
     shift: str | None = Field(validation_alias="Смена")
@@ -19,28 +19,39 @@ class TaskBase(BaseModel):
     date_begin: datetime | None = Field(validation_alias="ДатаВремяНачалаСмены")
     date_end: datetime | None = Field(validation_alias="ДатаВремяОкончанияСмены")
 
-
-class TaskGetPost(TaskBase):
-
     model_config = ConfigDict(populate_by_name=True,)
 
 
-class TaskProducts(TaskBase):
+class ListTasksAdd(BaseModel):
+    tasks: List[TaskGetPostPatch]
+
+
+class TaskProducts(TaskGetPostPatch):
     products: List[ProductBase]
 
 
-class TaskChange(TaskBase):
-    is_closed: bool = Field(exclude=True)
-    closed_at: datetime = Field(exclude=True)
+class TaskChange(BaseModel):
+    is_closed: Optional[bool] | None
+    task: str | None
+    line: str | None
+    shift: str | None
+    group: str | None
+    number_batch: int | None
+    date_batch: date | None
+    nomenclature: str | None
+    code: str | None
+    index: str | None
+    date_begin: datetime | None
+    date_end: datetime | None
 
 
 class TaskFilter(BaseModel):
-    task: Optional[str] | None = None
-    line: Optional[str] | None = None
-    shift: Optional[str] | None = None
-    group: Optional[str] | None = None
-    number_batch: Optional[int] | None = None
+    task: Optional[str] = None
+    line: Optional[str] = None
+    shift: Optional[str] = None
+    group: Optional[str] = None
+    number_batch: Optional[int] = None
 
 
 class TaskFilterRes(BaseModel):
-    tasks: List[TaskGetPost] | None = None
+    tasks: List[TaskGetPostPatch] | None = None

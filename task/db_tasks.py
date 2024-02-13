@@ -1,6 +1,6 @@
 from datetime import datetime
 from task.models import Task, Product
-from task.schema import TaskBase, TaskFilter, TaskGetPost
+from task.schema import TaskFilter, TaskGetPostPatch, ListTasksAdd
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, update, delete
 from fastapi import HTTPException
@@ -9,42 +9,45 @@ from fastapi import HTTPException
 # ==================Post endpoint. Create a task==================
 
 
-async def _create_task(item: TaskGetPost, async_session: AsyncSession):
+async def _create_task(item: ListTasksAdd, async_session: AsyncSession):
 
-    task = await get_task_by_batch_date(item=item,
-                                        async_session=async_session)
+    res_list = []
+    for new_task in item.tasks:
 
-    # Если уже существует какая-то партия с аналогичным номером партии и датой партии, мы должны ее перезаписать.
-    # Здесь проверяем, если есть, то перезаписываем
-    if task is not None:
-        query = update(Task).\
-            where(and_(Task.number_batch == item.number_batch,
-                       Task.date_batch == item.date_batch)).values(**item.dict())
+        task = await get_task_by_batch_date(new_task=new_task,
+                                            async_session=async_session)
 
-        await async_session.execute(query)
-        await async_session.commit()
-        return item
+        # Если смена не закрыта (False)
+        if not new_task.is_closed:
+            new_task.closed_at = None
 
-    try:
+        # Если уже существует какая-то партия с аналогичным номером партии и датой партии, мы должны ее перезаписать.
+        # Здесь проверяем, если есть, то перезаписываем
+        if task is not None:
 
-        new_task = Task(**item.dict())
-        res = TaskBase.model_validate(item)
-        async_session.add(new_task)
+            new_task_to_update = new_task.dict(exclude={'number_batch', 'date_batch'})
 
-        await async_session.commit()
+            query = update(Task).\
+                where(and_(Task.number_batch == task.number_batch,
+                           Task.date_batch == task.date_batch)).values(**new_task_to_update)
 
-        return res
+            res_list.append(new_task)
+            await async_session.execute(query)
 
-    except Exception as ex:
-        HTTPException(status_code=500,
-                      detail=f"Impossible to insert to the database {ex}")
+        else:
+            new_task_to_add = Task(**new_task.dict())
+            async_session.add(new_task_to_add)
+            res_list.append(new_task)
+
+    await async_session.commit()
+    return {'tasks': res_list}
 
 
-async def get_task_by_batch_date(item: TaskBase,
+async def get_task_by_batch_date(new_task: TaskGetPostPatch,
                                  async_session: AsyncSession):
 
-    query = select(Task).where(and_(Task.number_batch == item.number_batch,
-                                    Task.date_batch == item.date_batch))
+    query = select(Task).where(and_(Task.number_batch == new_task.number_batch,
+                                    Task.date_batch == new_task.date_batch))
 
     task = await async_session.execute(query)
     task_row = task.fetchone()
@@ -63,14 +66,13 @@ async def _get_task(id: int, async_session: AsyncSession):
                                      async_session=async_session)
 
         products_query = select(Product).\
+            select_from(Task).\
+            join(Product, Product.number_batch_id == Task.number_batch).\
             where(Product.number_batch_id == task.number_batch)
+
         products = await async_session.execute(products_query)
 
-        if products is None:
-            HTTPException(status_code=404,
-                          detail="Products with this batch were not found")
-
-        pr = [elem for elem in products.scalars()]
+        pr = [p for p in products.scalars()]
 
         res = {
               "is_closed": task.is_closed,
@@ -147,7 +149,7 @@ async def _get_filtered_tasks(item: TaskFilter,
             filter_by(**params_to_sort).offset(offset).limit(limit)
 
         tasks = await async_session.execute(query)
-        res_tasks = [i for i in tasks.scalars()]
+        res_tasks = [task for task in tasks.scalars()]
         res = {"tasks": res_tasks}
         return res
 

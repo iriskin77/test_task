@@ -2,14 +2,14 @@ from core.async_session import get_async_session
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from task import db_tasks
-from task.schema import TaskProducts, TaskChange, TaskFilter, TaskFilterRes, TaskGetPost
+from task.schema import TaskProducts, TaskChange, TaskFilter, TaskFilterRes, TaskGetPostPatch, ListTasksAdd
 
 
 router_task = APIRouter()
 
 
-@router_task.post("/", response_model=TaskGetPost)
-async def create_task(item: TaskGetPost,
+@router_task.post("/", response_model=ListTasksAdd)
+async def create_task(item: ListTasksAdd,
                       async_session: AsyncSession = Depends(get_async_session)):
 
     """"Эндпойнт добавления сменных заданий"""""
@@ -32,6 +32,7 @@ async def get_task(id: int,
     task = await db_tasks._get_task_by_id(id=id,
                                           async_session=async_session)
 
+    # Если сменного задания с данным ID нет, то вернуть 404 ошибку.
     if task is None:
         raise HTTPException(status_code=404,
                             detail="Task with this id was not found")
@@ -46,7 +47,7 @@ async def get_task(id: int,
                             detail=f"Database error: {ex}")
 
 
-@router_task.patch("/{id}", response_model=TaskGetPost)
+@router_task.patch("/{id}", response_model=TaskGetPostPatch)
 async def change_task(id: int,
                       params_to_update: TaskChange,
                       async_session: AsyncSession = Depends(get_async_session)):
