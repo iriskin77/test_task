@@ -12,7 +12,7 @@ class ProductBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True,)
 
 
-class ProductAddTasks(BaseModel):
+class ListAddProducts(BaseModel):
 
     products: List[ProductBase]
 
@@ -24,13 +24,13 @@ class ProductPost(ProductBase):
     is_aggregated: Optional[bool]
     aggregated_at: Optional[datetime]
 
-    model_config = ConfigDict(populate_by_name=True,)
 
-
-class ProductAggregation(BaseModel):
+class ProductAggregationRequest(BaseModel):
 
     task_id: int
     unique_code: str
 
-    model_config = ConfigDict(populate_by_name=True,)
 
+class ProductAggregationResponse(BaseModel):
+
+    unique_code: str | None = None
